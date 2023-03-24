@@ -24,6 +24,8 @@ public class InitRest {
         return "hello Shawn";
     }
 
+
+    // 添加 API
     @RequestMapping(method = RequestMethod.GET, value = "/java")
     public String java() throws IOException {
         ClassPathResource resource = new ClassPathResource("/javaDco/0322.txt");
