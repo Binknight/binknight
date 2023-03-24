@@ -1,0 +1,398 @@
+*******************************************************************************************************
+OOA，OOD，OOP
+java 特性
+抽象，封装，继承，多态
+接口和抽象类的区别： 
+1.抽象类可以定义构造器，接口不行
+2.抽象类可以没有抽象方法，有抽象方法的类一定是抽象类
+3.抽象类的成员属性可以被任意修饰符修饰，接口只能public
+4.抽象类可以包静态方法，接口不行
+5.一个类只能继承一个抽象类，但可以实现多个接口
+6.抽象类一般用于抽象的概念或对象，接口一般用于事物某些共同的特征或行为
+7.JDK1.8后接口可以有一个默认的方法实现，用default关键字修饰，接口也可以有多个静态方法实现
+
+
+*******************************************************************************************************
+面向对象编程VS面向过程编程
+基于接口编程而非实现编程
+多用组合少用继承（继承过深影响代码可维护性）
+接口vs抽象类
+贫血模型和充血模型
+
+评价代码的标准
+可维护性，
+可读性，
+可扩展性，
+灵活性，
+简洁性，
+可复用性，
+可测试性
+
+函数式接口，
+JDK1.8支持以后函数式接口编程，即只有一个抽象方法的接口使用FunctionalInterface注解
+*******************************************************************************************************
+设计原则
+1单一职责原则，提高内聚性，减少依赖
+2开闭原则，对扩展开放，对修改关闭
+3里氏替换原则，子类对象能够替换父类对象出现的任何地方
+4接口隔离原则，接口之间得职责尽可能相互隔离，降低耦合，减少依赖
+5依赖倒置原则，控制反转和依赖注入的理解
+6DRY原则，不要重复自己
+7KISS原则，即保持简洁原则，不要过度优化，
+8YANGNI原则，不要过度设计
+9LOD原则，高内聚低耦合原则，高内聚指导类本身的设计，松耦合指导类之间关系设计
+迪米特法则：类之间达到最低依赖，即只依赖必要接口，能不依赖就不依赖
+
+*******************************************************************************************************
+JMM --Java Memory Model
+happen-before规则
+
+1程序顺序规则
+2监视器锁规则
+3volatile变量规则
+4线程start规则
+5线程join规则
+6线程interrupt规则
+7finalizer规则
+8传递性规则
+
+synchronized和volatile的有序性分别怎么保证的？
+sybchronized只能保证加锁前代码和加锁代码之间的有序执行，并不能保证加锁代码块内部的有序性
+volatitle通过建立内存屏障可以禁止字节码指令重排序
+
+*******************************************************************************************************
+Class字节码
+
+魔数
+版本
+常量池 计数区+数据区
+访问标志  （public、private...）
+当前类索引（索引->常量池）
+父类索引
+接口索引
+方法表 计数区+数据区
+字段表 计数区+数据区
+附加属性
+
+*******************************************************************************************************
+JVM 内存模型
+
+Java object 可能存在于堆，也可能存在于栈TLAB（thread local allocation），
+ 逃逸分析->标量替换->栈上分配
+
+Java对象结构 -> 对象头 + 实例数据 + 对齐
+对象头 -- 哈希code + 锁信息 + GC age + 类型引用
+
+Java对象生命周期，创建阶段 -> 应用阶段 -> 不可见阶段 -> 不可达阶段 -> 收集阶段 -> 终结阶段 -> 重新分配阶段
+
+Java class 加载过程， class文件加载 + 链接 + 初始化
+*链接 --[ 验证 -> 准备 -> 解析]
+验证阶段 -> 0xCAFEBABE + JDK版本
+准备阶段 -> 为static变量分配空间，设置默认值
+解析阶段 -> 将常量池的符号引用替换为直接引用
+
+
+线程共享：Heap +Method Area (Meta Space)
+线程独享：VM Stack +JNI/ JNM stack + PCR
+守护线程：JITCompiler +GC 
+
+*******************************************************************************************************
+GC原理 + 算法 + 回收器 + 调优
+
+原理: 引用计数法+GC Root,可达性分析,eden(S0+S1)+old+Metaspace（方法区已过时）内存分配模型
+算法：eden + 复制算法，old+标记整理算法
+分代回收器：jdk8 default parallel scavenge +parallel old 
+CMS 并发标记+并发清除，但是会产生浮动垃圾+磁盘碎片
+G1 可以跨eden和old，标记整理不产生碎片，可以精准控制STW，内存分区，按优先级回收
+
+GC调优
+CPU 高消耗 ->1. 是否有CPU密集型计算，2 合理配置栈空间
+频繁Major GC/Full GC -> 1是否有内存泄漏，2考虑合理内存划分 3考虑分配更大空间
+反应延迟 -> 1.网络问题，2 IO 操作， 3， GC STW导致吞吐率降低，调整GC器
+高流量压力 -> 系统宕机，考虑内存扩容，或者增加弹性可伸缩，集群
+
+GC调优实践+jvisualvm
+
+*******************************************************************************************************
+NIO+Netty框架
+
+NIO ->JDK1.5 , 底层是内核态的select 和poll 函数，以事件循环的方式进行cpu轮询扫描文件句柄是否就绪
+a. select基于数组存储，缺点是一次轮询的文件句柄数固定1024
+b. poll基于链表存储，可以处理更多的事件，但是仍然是轮询
+
+NIO2.0 （AIO）-> JDK1.7, 调用内核函数epoll，事件通知模型，不需要轮询
+epoll 基于红黑树存储socket对应的文件句柄是否就绪
+epoll_create -- 创建epoll实例，存放socket连接事件
+epoll_ctl -- 对事件进行监控，主动响应就绪的事件到用户态
+epoll_wait --继续等待epoll文件描述符上的i/o事件
+
+零拷贝 -> direct buffers，直接使用堆外内存进行socket读写, 不需要字节缓冲区的二次copy。
+
+Netty, 与传统的多线程多进程模型比较，IO多路复用最大的优势是单线程，系统开销小，
+Netty 采用了串行无锁化设计，在 IO 线程内部进行串行操作，避免多线程竞争导致的性能下降。
+表面上看，串行化设计似乎 CPU 利用率不高，并发程度不够。但是，通过调整 NIO 线程池的线程
+参数，可以同时启动多个串行化的线程并行运行，线程模型性能更优。
+SelectionKey的四种状态，accept, connect, read, write
+
+*******************************************************************************************************
+并发工具包
+
+*Tread，Runnable， Callable
+*ReentrantLock -> locl.lock(), lock.unlock() (try - finnally 编程范式)
+*CountDownlatch -> latch.countDown(), latch.await(), 试用于等待多个线程全部执行完毕后开始主线程
+*CyclicBarrier ->cycle.await(), 适用于等待多个线程执行完毕某个任务后同时开始执行下一阶段任务
+*Semaphore -> s.acquire(), s.release(), (try - finnally 编程范式)
+*ReadWriteLock -> r.lock(), r.unlock(), 可以并发读，只能同步写，不支持锁升级RW，支持锁降级WR
+*StampLock -> s.readLock(),s.writeLock(),s.unLockRead(stamp),s.unLockWrite() 支持写锁，悲观读锁，和乐观读
+
+并发容器
+
+*CopyOnWriteArrayList， 读多写少的场景，写时在copy的版本上update
+*ConcurrentHashMap， 分段Segment16，分段加锁，提高并发度，key值是hash table无序
+*ConcurrentSkipListMap， 同上，只是key为跳表结构，插入，删除，查询性能更好O(logn)
+*CopyOnWriteArraySet, 读多写少的场景，写时在copy的版本上update
+*ConcurrentSkipListSet, 同上，只是key为跳表结构，插入，删除，查询性能更好O(logn)
+*queue, 按阻塞非阻塞，单端双端, 分类记忆
+  --BlockingQueue [LinkedBlockingQueue,ArrayBlockingQueue,SynchronousQueue,LinkedTransferQueue,DelayQueue, PriorityBlockingQueue]
+  --BlockingDeque [LinkedBlockingDeque]
+  --ConcurrentLinkedQueue
+  --ConcurrentLinkedDeque
+ 注意，只有LinkedBlockingQueue 和ArrayBlockingQueue支持有界，其他需要注意OOM
+
+原子类 -- AtomicInterge， AtomicLong，AtomicReference...
+*******************************************************************************************************
+异步编程
+FeatureTask 同步操作转异步操作
+CompletableFuture 多个异步操作组合适用
+CompletionService 批量处理异步操作
+ 
+*******************************************************************************************************
+网络模型七层架构
+
+物理层 ->以太网光纤接口，传输数据-比特
+数据链路层 -> 交换机， Mac地址的封装和解封装， 传输数据-帧
+网络层 -> 路由器对IP地址的封装和解封装，传输数据-包，报文，
+传输层 -> 定义的是传输协议和端口，传输数据-段
+会话层 -> 系统之间建立会话请求，SSL/TLS 协议
+表示层 -> 主要对数据进行加解密，压缩解压缩，转化成图片文本声音等
+应用层 -> 应用终端，web浏览器
+
+
+*******************************************************************************************************
+HTTPS 通信过程
+
+TLS 1.2 --四次握手
+TLS 1.3 --两次握手（hello + share key）
+
+TCP 三次握手和四次挥手
+seq + ack的双向确认
+
+*非对称加密 + CA cert  -> 1. 保证公钥的可靠 2. 保证通信对称秘钥的安全 3.非对称用于TLS握手阶段
+*对称加密 -> 1.比非对称加密高效 2.适用于通信阶段加密
+
+CA颁发证书，解决中间人问题, 主要为了保证公钥的真实性，证书结构： 
+内容-> Hash -> 摘要 -> CA 私钥加密 -> 数字签名，+ [被访问者的公钥, Hash 算法]
+
+*******************************************************************************************************
+Spring Bean
+
+IOC 容器控制反转，把对象创建和调用的过程，交给spring管理
+
+Bean 生命周期
+1. 反射，通过构造创建bean实例
+2. 为bean设置属性
+3. 把bean实例传递给bean的后置处理器的方法 （bean 初始化方法之前）
+4. 调用bean的初始化方法，init-method
+5. 把bean实例传递给bean的后置处理器的方法（bean 初始化方法之后）
+6. 可以正常调用bean实例
+7. 关闭容器的时候，调用销毁bean的方法
+ 
+Bean 创建时候的循环依赖问题
+通过三级缓存解决
+*一级 singletonObjects : 单例池，存放已经经历了完整生命周期的Bean对象
+*二级 earlySingletonObjects,  存放早期暴露出来的Bean对象，实例化以后属性可能还未设置
+*三级 singletonFactories， 存放早期暴露的Bean的工厂
+*二三级缓存主要为解决循环依赖对象需要提前被aop代理
+
+Spring MVC
+
+核心类，DispatcherServlet，作用-- 接受请求，双向转发，响应结果
+
+流程： 
+client 请求 -> dispatcherSerlvet -> Handlermapping ->HandlerExecutionChain -> handlerAdapter -> handler （controller layer）->ModelAndView -> dispatcherSerlvet-> ViewResolver ->  view -> dispatcherSerlvet ->响应 Client
+
+*******************************************************************************************************
+Mybatis
+
+工作原理：
+1. 加载配置文件和映射文件
+2. 建造者模式创建SqlSession工厂SqlSessionFactoryBuilder -> SqlSessionFactory
+3. 工厂类打开 SqlSession ->内部的Executor -> StatementHandler -> 调用API 操作数据库 | 调用Mapper代理对象执行数据库操作
+4. 关闭SqlSession 会话
+
+二级缓存原理，采用装饰器模式
+一级缓存--session, 缓存命中 5%
+二级缓存--sqlSessionFactory， 缓存命中90%
+执行缓存顺序，为什么先走二级缓存？ ->  二级缓存命中高，避免再次查询一级缓存
+
+如何自定义三级缓存
+1. 重新实现Catch接口，重写其中的getObject和putObject方法
+2. 在映射文件的cache标签下添加自定义缓存type, 默认的是PERPETUAL
+
+#{} -- 预编译处理，替换为？->PreparedStatement的set方法复制
+${} -- 直接进行替换处理，有sql注入风险
+ 
+设计模式：建造者模式，工厂模式，装饰器模式，代理模式，适配器模式。。。。
+
+物理分页和逻辑分页
+逻辑分页-> 数据库一次拉取，按需返给前端
+物理分页-> 数据库拉取和页面需要展示的一致，通过sql查询嵌套limit得到结果
+
+*******************************************************************************************************
+Spring Cloud 核心组件
+ 
+
+Spring Cloud Netflix ：Config + Eureka + Hystrix +    Zuul      +  Feign   +  Ribbon + Sleuth  +  Steam
+Spring Cloud Alibaba :                Nacos + Sentinel + Gateway +          Dubble         + Stream +  Seata
+
+分布式事务：分散在不同服务节点上的事务操作，要保证其原子性，同时成功，同时失败
+实现方式：
+1. 利用数据库的事务机制
+2. 通过消息队列 的事务机制
+3. Redis SETNX 或者Redission 数据框架
+3. Seata两阶段提交  AT XA， 锁资源，先让事务分别执行sql，然后一起commit或者rollback
+4. Seata三阶段提交 TCC， 多一个准备阶段，让其他连接都准备好，然后同上
+
+分布式事务三个角色：事务管理者+资源管理者+事务协调器
+
+*******************************************************************************************************
+ELK 
+ElasticSearch： 倒排索引的结构 -> term index + term dictionary + Posting List
+基于Lucene的java开发的分布式搜索引擎+Rest API 
+LogStash + Kabana
+
+Splunk + 商业软件，收费，PAAS，也是基于倒排索引，有自己独立的一套检索语言，本人用到了分布式日志检索，以及线上突发情况预警和监控， 以及客户端行为追踪分析
+
+
+*******************************************************************************************************
+MySql 数据库
+
+存储引擎：
+InnoDB -> 支持事务， 支持外键， 默认锁是行锁
+MyISam -> 不支持事务，不支持外键，  默认锁是表锁
+
+mysql 
+
+*索引采用B+ tree结构， 单节点一次读取16KB，所有父节点都只有索引，数据全部存储在叶子节点，叶子节点之间维护一个有序的双向链表
+
+*聚集索引 键值的逻辑顺序和表中的物理存储顺序一致，索引文件和数据是同一份存储文件
+如果包含多个列又称联合索引，联合索引遵循最左前缀原则，如果sql索引不是主键，则会先查询主键对应的全列信息，即索引覆盖，整个二次查询的过程就是回表
+
+*非聚集索引，就是索引和数据存储是分开的独立文件，索引文件里面存储的是数据地址的指针，主键索引和辅助索引是分开的
+
+SQL 调优
+1. slow_query_log  + slow_query_log_file + slow_query_log, 根据慢日志定位慢查询sql
+2. show profile 查看执行过程的耗时统计，确定性能瓶颈
+3. explain 分析sql，是否用到索引，避免全表扫描ALL或所有索引树Index的查找
+
+*******************************************************************************************************
+Redis
+
+为什么快
+1. 基于内存
+2. 单线程，没有线程切换
+3. IO多路复用 epoll
+4. 全局哈希表
+
+*******************************************************************************************************
+RabbitMQ
+
+架构：producer  -> broker -> exchange ->routingKey ->binding ->queue -> consumer
+交换机类型：direct + fanout + topic
+
+如何保证消息有序消费：
+1. producer端保证实现MessageQueueSelector，固定某个queue存放顺序消息
+2. queue 顺序追加，加锁保证顺序消费
+3. consumer MessageListenerOrderly 串行消费消息，通过本地队列加锁
+
+消息进入死信队列的三个条件：
+1. 消息没有接收到ack或者被reject，并且此时requeue属性设置为false
+2. 消息TTL过期，可以是消息本身的TTL也可以是队列的TTL，两者取最短TTL
+3. 消息队列已满
+
+Kafka
+分布式的，可划分，冗余备份的持久性的数据流中间件
+架构：producer  -> broker -> Topic-> Patition -> Message -> consumer
+
+RabbbitMQ VS Kafka
+1. 前者高级灵活的路由规则； 后者支持严格的消息顺序
+2. 前者也支持消息延迟过期； 后者支持消息重放，可多次消费
+3. 前者有高级容错能力，支持死信队列；
+4. 前者消费端实现简单；后者相对复杂；
+5. 前者业务扩展性强；后者数据处理扩展性强；
+
+*******************************************************************************************************
+Linux 
+
+ls -alh
+cd
+clear
+pwd 
+mkdir -p
+touch
+more
+cat
+cp -r 1 2
+rm -r -f
+which
+find / -name "XX"
+find / -size + 100k
+echo "2" > 1.txt
+echo "1231" >> 1.txt
+tail -10 1.txt
+tail -f 1.txt 
+chmod
+chown 
+history
+！
+ctrl+ R
+systemctl status firewalld
+systemctl start firewalld
+systemctl stop firewalld
+systemctl enable firewalld
+systemctl disable firewalld
+ln -s des2/helloworld.txt 
+ntpdate -u ntp.aliyun.com
+
+ping
+
+wget -b url
+
+curl url
+curl -O url
+
+公认端口1-1023
+注册端口1024-49515
+动态端口49515-
+netstat -anp | grep "port"
+ps -ef
+top
+
+
+
+
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
