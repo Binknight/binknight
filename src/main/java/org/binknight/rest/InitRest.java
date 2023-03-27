@@ -1,18 +1,15 @@
 package org.binknight.rest;
 
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.util.FileSystemUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.FileInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.stream.Collectors;
+import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.util.StringJoiner;
 
 @RestController
 @RequestMapping(value = "/v1.0/api/")
@@ -24,11 +21,17 @@ public class InitRest {
         return "hello Shawn";
     }
 
+
+    // 添加 API
     @RequestMapping(method = RequestMethod.GET, value = "/java")
-    public String java() throws IOException {
-        ClassPathResource resource = new ClassPathResource("/javaDco/0322.txt");
-        Path path = Paths.get(resource.getURI());
-        String collect = Files.lines(path).collect(Collectors.joining("\r\n"));
-        return collect;
+    public String java() throws IOException, URISyntaxException {
+        InputStream rs = InitRest.class.getResourceAsStream("/javaDco/0322.txt");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(rs));
+        StringJoiner txt = new StringJoiner("\n");
+        while(reader.ready()) {
+            txt.add(reader.readLine());
+            System.out.println(reader.readLine());
+        }
+        return txt.toString();
     }
 }
