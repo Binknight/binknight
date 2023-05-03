@@ -4,7 +4,11 @@ public class DoubleCheckLockTest {
 
     public static volatile DoubleCheckLockTest singleton = null;
 
-    private DoubleCheckLockTest() {}
+    private DoubleCheckLockTest() {
+        if(null != singleton){
+            throw new RuntimeException("singleton is already existing!");
+        }
+    }
 
     public static DoubleCheckLockTest getInstance(){
         // check 1

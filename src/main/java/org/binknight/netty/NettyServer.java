@@ -1,11 +1,15 @@
 package org.binknight.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.CharsetUtil;
 
 public class NettyServer {
     public static void main(String[] args) throws InterruptedException {
@@ -34,5 +38,18 @@ public class NettyServer {
                 //3.启动服务器，bind是异步操作，sync是等异步操作结束
                 .bind(9000).sync();
         System.out.println("netty server start...");
+    }
+
+    public static class NettyServerHandler extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelActive(ChannelHandlerContext ctx)  {
+            System.out.println("客户端建立连接通道完成");
+        }
+
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+            ByteBuf buffer = (ByteBuf) msg;
+            System.out.println("收到客户端消息： " + buffer.toString(CharsetUtil.UTF_8));
+        }
     }
 }

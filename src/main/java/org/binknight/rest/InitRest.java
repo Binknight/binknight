@@ -15,7 +15,6 @@ import java.util.StringJoiner;
 @RequestMapping(value = "/v1.0/api/")
 public class InitRest {
 
-
     @RequestMapping(method = RequestMethod.GET, value = "/hello")
     public String hello(){
         return "hello Shawn";
@@ -34,4 +33,6 @@ public class InitRest {
         }
         return txt.toString();
     }
+
+
 }
